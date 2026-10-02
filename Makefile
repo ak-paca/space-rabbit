@@ -57,8 +57,14 @@ VERSION   ?= $(shell git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')
 build: $(BIN) verify-macos-min verify-localizations
 
 # Pure logic tests; they never touch the desktop.
-.PHONY: test test-mc-guard
-test: test-mc-guard
+.PHONY: test test-mc-guard test-shortcuts
+test: test-mc-guard test-shortcuts
+
+test-shortcuts:
+	@mkdir -p .build/tests
+	$(SWIFTC) $(SWIFTFLAGS) -target $(SWIFT_TARGET) -o .build/tests/shortcuts \
+		$(filter-out App/main.swift,$(SRCS)) Tests/Shortcuts/main.swift $(LDFLAGS)
+	@.build/tests/shortcuts
 
 test-mc-guard:
 	@mkdir -p .build/tests

@@ -143,10 +143,15 @@ func loadSpaceSwitchShortcuts() {
     // and may have changed since our last read
     CFPreferencesAppSynchronize("com.apple.symbolichotkeys" as CFString)
 
-    guard let prefs = CFPreferencesCopyAppValue(
+    let prefs = CFPreferencesCopyAppValue(
         "AppleSymbolicHotKeys" as CFString,
         "com.apple.symbolichotkeys" as CFString
-    ) as? NSDictionary else {
+    ) as? NSDictionary
+    loadSpaceSwitchShortcuts(from: prefs)
+}
+
+func loadSpaceSwitchShortcuts(from prefs: NSDictionary?) {
+    guard let prefs else {
         gBindingLeft           = kDefaultBindingLeft
         gBindingRight          = kDefaultBindingRight
         gBindingMissionControl = kDefaultBindingMissionControl
@@ -170,11 +175,9 @@ func loadSpaceSwitchShortcuts() {
                                      default: kDefaultBindingMissionControl)
 
     // Hotkeys 118..127 = "Switch to Desktop 1".."Switch to Desktop 10".
-    // These have no enabled-by-default system binding, and bare number
-    // keys must never be intercepted — require at least one modifier.
     for i in 0..<10 {
         if case .bound(let b) = readHotkey(from: prefs, key: String(118 + i)),
-           !b.mods.isEmpty {
+           !b.mods.isEmpty || CycleShortcut.functionKeyLabels[b.keycode] != nil {
             gSpaceKeys[i] = b
         } else {
             gSpaceKeys[i] = nil
